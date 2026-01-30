@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>人物详情 | ReSpider Mod Wiki</title>
+    <link rel="icon" href="ico/title-logo.ico">
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/character-detail.css"></link>
+</head>
+<body>
+    <div class="wiki-bg">
+        <div class="wiki-header">
+            <div class="wiki-header-title">
+                <a href="index.html">ReSpider Mod</a>
+            </div>
+            <div class="wiki-header-logo">
+                <img src="img/wiki-logo.png" alt="logo" width="128px">
+            </div>
+        </div>
+        
+        <div class="wiki-nav"> 
+            <a href="index.html">首页</a>
+            <a href="character.html">人物</a>
+            <a href="skill.html">技能</a>
+        </div>
+        
+        <div class="wiki-content">
+            <div id="character-detail-content">
+                <a href="character.html" style="margin-bottom: 20px; display: inline-block;">← 返回人物列表</a>
+                
+                <div v-if="loading">加载中...</div>
+                <div v-else-if="character">
+                    <h1>{{ character.name }}</h1>
+                    <h3>{{ character.name_jp }}</h3>
+                    
+                    <div style="display: flex; gap: 30px; margin-top: 20px;">
+                        <div style="flex: 1;">
+                            <img :src="character.image" :alt="character.name" style="max-width: 300px;">
+                        </div>
+                        <div style="flex: 2;">
+                            <p><strong>ID：</strong>{{ character.id }}</p>
+                            <p><strong>年龄：</strong>{{ character.age }}</p>
+                            <p><strong>性别：</strong>{{ character.gender }}</p>
+                            <p><strong>种族：</strong>{{ character.race }}</p>
+                            
+                            <p v-if="character.alias && character.alias.length > 0">
+                                <strong>别名：</strong>
+                                {{ Array.isArray(character.alias) ? character.alias.join('、') : character.alias }}
+                            </p>
+                            
+                            <p v-if="character.tags && character.tags.length > 0">
+                                <strong>标签：</strong>
+                                {{ Array.isArray(character.tags) ? character.tags.join('、') : character.tags }}
+                            </p>
+                        </div>
+                    </div>
+                    
+                    <div style="margin-top: 30px;">
+                        <h2>生平</h2>
+                        <div style="white-space: pre-line; line-height: 1.6;">
+                            {{ character.biography }}
+                        </div>
+                    </div>
+                </div>
+                <div v-else>
+                    <p>未找到该人物信息</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script type="module">
+        import { createApp } from "https://unpkg.com/vue@3/dist/vue.esm-browser.js";
+        
+        createApp({
+            data() {
+                return {
+                    character: null,
+                    loading: true
+                }
+            },
+            mounted() {
+                this.loadCharacter();
+            },
+            methods: {
+                async loadCharacter() {
+                    try {
+                        // 1. 获取URL中的ID参数
+                        const urlParams = new URLSearchParams(window.location.search);
+                        const characterId = parseInt(urlParams.get('id')) || 1;
+                        
+                        // 2. 请求所有人物数据
+                        const response = await axios.get("https://saberwithhutao-rgb.github.io/respider-wiki/ReSpider/data/characters.json");
+                        
+                        if (response.data.code === 200) {
+                            // 3. 根据ID查找对应人物
+                            this.character = response.data.data.find(c => c.id === characterId);
+                            
+                            // 4. 如果没有找到，使用第一个
+                            if (!this.character && response.data.data.length > 0) {
+                                this.character = response.data.data[0];
+                            }
+                        }
+                    } catch (error) {
+                        console.error('加载人物数据失败:', error);
+                    } finally {
+                        this.loading = false;
+                    }
+                }
+            }
+        }).mount("#character-detail-content");
+    </script>
+</body>
+</html>
