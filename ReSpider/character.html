@@ -40,7 +40,6 @@
                         <tr>
                             <th>序号</th>
                             <th>姓名</th>
-                            <th>姓名（日文）</th>
                             <th>别名</th>
                             <th>年龄</th>
                             <th>性别</th>
@@ -53,7 +52,6 @@
                         <tr v-for="character in characters" :key="character.id" @click="viewDetail(character.id)" class="clickable-row">
                             <td>{{ character.id }}</td>
                             <td>{{ character.name }}</td>
-                            <td>{{ character.name_jp }}</td>
                             <td>
                                 {{ Array.isArray(character.alias) ? character.alias.join(', ') : character.alias }}
                             </td>
@@ -98,6 +96,7 @@
                     axios.get("https://saberwithhutao-rgb.github.io/respider-wiki/ReSpider/data/characters.json").then((result) => {
                         this.allCharacters = result.data.data;
                         this.characters = result.data.data;
+                        console.log('获取人物成功', this.allCharacters)
                     }).catch((err) => {
                         alert("获取人物失败");
                     });
