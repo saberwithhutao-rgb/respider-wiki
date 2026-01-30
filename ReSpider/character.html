@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ReSpider Mod Wiki</title>
+
+    <link rel="icon" href="ico/title-logo.ico">
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/character.css">
+</head>
+<body>
+    <div class="wiki-bg">
+        <div class="wiki-header">
+            <div class="wiki-header-title">
+                <a href="index.html">ReSpider Mod</a>
+            </div>
+            <div class="wiki-header-logo">
+                <img src="img/wiki-logo.png" alt="logo" width="128px">
+            </div>
+            
+        </div>
+        <div class="wiki-nav"> 
+            <a href="index.html">首页</a>
+            <a href="character.html">人物</a>
+            <a href="skill.html">技能</a>
+        </div>
+        <div class="wiki-content"> 
+            <div id="character-content">
+                <form class="search-form">
+                    <input type="text" placeholder="请输入序号" class="search-input" v-model="searchForm.id">
+                    <input type="text" placeholder="请输入姓名" class="search-input" v-model="searchForm.name">
+                    <input type="text" placeholder="请输入种族" class="search-input" v-model="searchForm.race">
+                    <input type="text" placeholder="请输入标签" class="search-input" v-model="searchForm.tag">
+                    <button type="button" class="search-btn" v-on:click="search">搜索</button>
+                    <button type="button" class="reset-btn" v-on:click="reset">重置</button>
+                </form>
+                <table class="character-table">
+                    <thead>
+                        <tr>
+                            <th>序号</th>
+                            <th>姓名</th>
+                            <th>姓名（日文）</th>
+                            <th>别名</th>
+                            <th>年龄</th>
+                            <th>性别</th>
+                            <th>种族</th>
+                            <th>图片</th>
+                            <th>标签</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr v-for="character in characters" :key="character.id" @click="viewDetail(character.id)" class="clickable-row">
+                            <td>{{ character.id }}</td>
+                            <td>{{ character.name }}</td>
+                            <td>{{ character.name_jp }}</td>
+                            <td>
+                                {{ Array.isArray(character.alias) ? character.alias.join(', ') : character.alias }}
+                            </td>
+                            <td>{{ character.age }}</td>
+                            <td>{{ character.gender }}</td>
+                            <td>{{ character.race }}</td>
+                            <td><img :src="character.image" :alt="character.name" width="128px"></td>
+                            <td>
+                                {{ Array.isArray(character.tags) ? character.tags.join(', ') : character.tags }}
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script type="module">
+        import { createApp } from "https://unpkg.com/vue@3/dist/vue.esm-browser.js";
+
+        createApp({
+            data() {
+                return {
+                    searchForm: {
+                        id: "",
+                        name: "",
+                        race: "",
+                        tag: ""
+                    },
+                    allCharacters: [
+                    ],
+                    characters: [
+                    ],
+                }
+            },
+            mounted() {
+                this.fetchAllCharacters();
+            },
+            methods: {
+                fetchAllCharacters() {
+                    axios.get("https://saberwithhutao-rgb.github.io/respider-wiki/ReSpider/data/characters.json").then((result) => {
+                        this.allCharacters = result.data.data;
+                        this.characters = result.data.data;
+                    }).catch((err) => {
+                        alert("获取人物失败");
+                    });
+                },
+                viewDetail(characterId) {
+                    // 跳转到人物详情页，传递人物ID作为参数
+                    window.location.href = `character-detail.html?id=${characterId}`;
+                },
+                search() {
+                    console.log('搜索触发', this.searchForm)
+                    this.characters = this.allCharacters.filter(character => {
+                        // 检查每一项是否匹配搜索框的内容
+                        const matchId = !this.searchForm.id.trim() || String(character.id) === this.searchForm.id.trim();
+                        const matchName = !this.searchForm.name || character.name.toLowerCase().includes(this.searchForm.name.toLowerCase());
+                        const matchRace = !this.searchForm.race || character.race.toLowerCase().includes(this.searchForm.race.toLowerCase());
+                        
+                        // 标签搜索：检查搜索标签是否包含在tags数组中
+                        let matchTag = true;
+                        if (this.searchForm.tag.trim()) {
+                            const searchTag = this.searchForm.tag.trim().toLowerCase();
+                            if (Array.isArray(character.tags)) {
+                                // 如果tags是数组，检查是否包含搜索标签
+                                matchTag = character.tags.some(tag => tag.toLowerCase().includes(searchTag));
+                            } else if (typeof character.tags === 'string') {
+                                // 如果tags是字符串（兼容旧格式），直接检查是否包含
+                                matchTag = character.tags.toLowerCase().includes(searchTag);
+                            }
+                        }
+                        
+                        return matchId && matchName && matchRace && matchTag;
+                    });
+                },
+                reset() {
+                    this.searchForm = {
+                        id: "",
+                        name: "",
+                        race: "",
+                        tag: ""
+                    };
+                    this.characters = this.allCharacters;
+                }
+            }
+        }).mount("#character-content");
+    </script>
+</body>
+</html>

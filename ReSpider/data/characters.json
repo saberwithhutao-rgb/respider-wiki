@@ -1,0 +1,18 @@
+{
+  "code": 200,
+  "msg": "success",
+  "data": [
+    {
+      "id": 1,
+      "name": "角色名",
+      "name_jp": "キャラクター名", 
+      "alias": ["别名1", "别名2"],
+      "age": "17",
+      "gender": "女",
+      "race": "人类",
+      "biography": "详细的生平介绍文字...",
+      "image": "character_image_url.jpg",
+      "tags": ["主角", "魔法师", "傲娇"]
+    }
+  ]
+}

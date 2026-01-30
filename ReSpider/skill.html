@@ -22,16 +22,16 @@
         </div>
         <div class="wiki-nav"> 
             <a href="index.html">首页</a>
-            <a href="#">人物</a>
+            <a href="character.html">人物</a>
             <a href="skill.html">技能</a>
         </div>
         <div class="wiki-content"> 
             <div id="skill-content">
                 <form class="search-form">
-                    <input type="text" placeholder="请输入序号" class="search-input" v-model="searchForm.id"></input>
-                    <input type="text" placeholder="请输入技能名称" class="search-input" v-model="searchForm.name"></input>
-                    <input type="text" placeholder="请输入技能描述" class="search-input" v-model="searchForm.desc"></input>
-                    <input type="text" placeholder="请输入技能效果" class="search-input" v-model="searchForm.effect"></input>
+                    <input type="text" placeholder="请输入序号" class="search-input" v-model="searchForm.id">
+                    <input type="text" placeholder="请输入技能名称" class="search-input" v-model="searchForm.name">
+                    <input type="text" placeholder="请输入技能描述" class="search-input" v-model="searchForm.desc">
+                    <input type="text" placeholder="请输入技能效果" class="search-input" v-model="searchForm.effect">
                     <button type="button" class="search-btn" v-on:click="search">搜索</button>
                     <button type="button" class="reset-btn" v-on:click="reset">重置</button>
                 </form>
