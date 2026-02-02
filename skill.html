@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ReSpider Mod Wiki</title>
+
+    <link rel="icon" href="ico/title-logo.ico">
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/skill.css">
+</head>
+<body>
+    <div class="wiki-bg">
+        <div class="wiki-header">
+            <div class="wiki-header-title">
+                <a href="index.html">ReSpider Mod</a>
+            </div>
+            <div class="wiki-header-logo">
+                <img src="img/wiki-logo.png" alt="logo" width="128px">
+            </div>
+            
+        </div>
+        <div class="wiki-nav"> 
+            <a href="index.html">首页</a>
+            <a href="character.html">人物</a>
+            <a href="skill.html">技能</a>
+            <a href="wiki-ai.html">wiki AI</a>
+        </div>
+        <div class="wiki-content"> 
+            <div id="skill-content">
+                <form class="search-form">
+                    <input type="text" placeholder="请输入序号" class="search-input" v-model="searchForm.id">
+                    <input type="text" placeholder="请输入技能名称" class="search-input" v-model="searchForm.name">
+                    <input type="text" placeholder="请输入技能描述" class="search-input" v-model="searchForm.desc">
+                    <input type="text" placeholder="请输入技能效果" class="search-input" v-model="searchForm.effect">
+                    <button type="button" class="search-btn" v-on:click="search">搜索</button>
+                    <button type="button" class="reset-btn" v-on:click="reset">重置</button>
+                </form>
+                <table class="skill-table">
+                    <thead>
+                        <tr>
+                            <th>序号</th>
+                            <th>技能名称</th>
+                            <th>技能描述</th>
+                            <th>技能效果</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr v-for="skill in skills" :key="skill.id">
+                            <td>{{ skill.id }}</td>
+                            <td>{{ skill.name }}</td>
+                            <td>{{ skill.desc }}</td>
+                            <td>{{ skill.effect }}</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script type="module">
+        import { createApp } from "https://unpkg.com/vue@3/dist/vue.esm-browser.js";
+
+        createApp({
+            data() {
+                return {
+                    searchForm: {
+                        id: "",
+                        name: "",
+                        desc: "",
+                        effect: ""
+                    },
+                    allSkills: [
+                    ],
+                    skills: [
+                    ],
+                }
+            },
+            mounted() {
+                this.fetchAllSkills();
+            },
+            methods: {
+                async fetchAllSkills() {
+                    try {
+                        const result = await axios.get("https://saberwithhutao-rgb.github.io/respider-wiki/ReSpider/data/skills.json");
+                        this.allSkills = result.data.data;
+                        this.skills = result.data.data;
+                    } catch (err) {
+                        console.error("获取技能失败:", err);
+                        alert("获取技能失败");
+                    }
+                },
+                search() {
+                    // 使用过滤函数
+                    console.log('搜索触发', this.searchForm)
+                    this.skills = this.allSkills.filter(skill => {
+                        // 检查每一项是否匹配搜索框的内容（不区分大小写）
+                        const matchId = !this.searchForm.id.trim() || String(skill.id) === this.searchForm.id.trim();
+                        const matchName = !this.searchForm.name || skill.name.toLowerCase().includes(this.searchForm.name.toLowerCase());
+                        const matchDesc = !this.searchForm.desc || skill.desc.toLowerCase().includes(this.searchForm.desc.toLowerCase());
+                        const matchEffect = !this.searchForm.effect || skill.effect.toLowerCase().includes(this.searchForm.effect.toLowerCase());
+                        // 所有有输入的条件都必须匹配
+                        return matchId && matchName && matchDesc && matchEffect;
+                    });
+                },
+                reset() {
+                    this.searchForm = {
+                        id: "",
+                        name: "",
+                        desc: "",
+                        effect: ""
+                    };
+                    this.skills = this.allSkills;
+                }
+            }
+        }).mount("#skill-content");
+    </script>
+</body>
+</html>
