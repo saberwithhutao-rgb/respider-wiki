@@ -108,7 +108,6 @@
                 this.isLoading = true;
                 
                 try {
-                    // 这里可以选择流式或非流式
                     await this.sendNormalRequest(userMessage);
                 } catch (error) {
                     console.error('请求失败:', error);
@@ -125,64 +124,82 @@
                 }
             },
             
-            // 方案1：非流式请求（简单）
+            
             async sendNormalRequest(userMessage) {
-                try {
-                    // 将请求URL改为你的Vercel函数地址，格式通常为：https://你的项目名.vercel.app/api/chat
-                    const proxyUrl = 'https://respider-wiki.vercel.app/api/chat';
+                // 为AI的回复预先创建一个“空”消息卡片，用于后续追加内容
+                const aiMessageIndex = this.messages.length;
+                this.messages.push({
+                    id: Date.now(), // 唯一ID
+                    role: 'assistant',
+                    content: '', // 内容初始为空，后续逐步追加
+                    timestamp: new Date(),
+                    isStreaming: true // 可选标记，用于UI显示加载状态
+                });
 
+                try {
+                    const proxyUrl = 'https://respider-wiki.vercel.app/api/chat';
                     const response = await fetch(proxyUrl, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({
-                            messages: this.messages.map(msg => ({
+                            messages: this.messages.slice(0, -1).map(msg => ({ // 注意：不包含刚创建的空白AI消息
                                 role: msg.role,
                                 content: msg.content
                             })),
-                            stream: false
+                            stream: true // 启用流
                         })
                     });
-                    
-                    console.log('收到响应，状态码:', response.status);
-                    
+
                     if (!response.ok) {
-                        // 尝试读取更详细的错误信息
                         const errorText = await response.text();
-                        console.error('API请求失败，响应内容:', errorText);
                         throw new Error(`API请求失败：${response.status} - ${errorText}`);
                     }
-                    
-                    const data = await response.json();
-                    console.log('API响应数据:', data); // 这是关键调试信息
-                    
-                    // 尝试从智谱API的响应结构中提取回复内容
-                    // 注意：智谱的响应结构可能是 data.choices[0].message.content
-                    if (data && data.choices && data.choices[0] && data.choices[0].message) {
-                        const aiReply = data.choices[0].message.content;
-                        this.messages.push({
-                            id: Date.now(),
-                            role: 'assistant',
-                            content: aiReply,
-                            timestamp: new Date()
-                        });
-                    } else {
-                        console.error('无法从响应中解析出回复内容，响应结构为:', data);
-                        throw new Error('API返回了未知的数据格式');
+
+                    // 以下为处理流式响应的核心逻辑
+                    const reader = response.body.getReader();
+                    const decoder = new TextDecoder('utf-8');
+                    let accumulatedText = '';
+
+                    while (true) {
+                        const { done, value } = await reader.read();
+                        if (done) break; // 流结束
+
+                        const chunk = decoder.decode(value, { stream: true });
+                        const lines = chunk.split('\n').filter(line => line.trim() !== '');
+
+                        for (const line of lines) {
+                            if (line.startsWith('data: ')) {
+                                const data = line.slice(6); // 去掉 'data: ' 前缀
+                                if (data === '[DONE]') continue; // 流结束信号
+
+                                try {
+                                    const parsed = JSON.parse(data);
+                                    const contentDelta = parsed.choices[0]?.delta?.content || '';
+                                    if (contentDelta) {
+                                        accumulatedText += contentDelta;
+                                        // 关键：实时更新第 aiMessageIndex 条消息的内容
+                                        this.messages[aiMessageIndex].content = accumulatedText;
+                                    }
+                                } catch (e) {
+                                    console.warn('解析流数据失败:', e, '原始数据:', data);
+                                }
+                            }
+                        }
                     }
-                    
                 } catch (error) {
-                    console.error('请求过程中发生错误:', error);
-                    this.messages.push({
-                        id: Date.now(),
-                        role: 'assistant',
-                        content: `抱歉，请求AI时出现错误：${error.message}`,
-                        timestamp: new Date()
-                    });
+                    console.error('流式请求过程中发生错误:', error);
+                    // 如果出错，更新那条空白AI消息为错误信息
+                    this.messages[aiMessageIndex].content = `抱歉，请求AI时出现错误：${error.message}`;
+                } finally {
+                    // 流结束，无论成功失败，移除流式标记
+                    if (this.messages[aiMessageIndex]) {
+                        this.messages[aiMessageIndex].isStreaming = false;
+                        // 确保最终时间戳是完整的
+                        this.messages[aiMessageIndex].timestamp = new Date();
+                    }
+                    this.isLoading = false;
                 }
             },
-            
-            
-            // 滚动到底部
             scrollToBottom() {
                 this.$nextTick(() => {
                     const container = this.$refs.messagesContainer;
@@ -191,7 +208,7 @@
                     }
                 });
             }
-        },
+        }, 
         watch: {
             // 当消息更新时自动滚动
             messages: {
