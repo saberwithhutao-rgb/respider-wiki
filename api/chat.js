@@ -1,5 +1,18 @@
 // /api/chat.js - 修复版Vercel中转函数
 export default async function handler(req, res) {
+  // 设置CORS - 方案一（无凭证）
+  const allowedOrigins = ['https://saberwithhutao-rgb.github.io', 'https://respider-wiki.vercel.app'];
+  const origin = req.headers.origin;
+  
+  if (allowedOrigins.includes(origin)) {
+    res.setHeader('Access-Control-Allow-Origin', origin);
+  }
+  // 注意：移除了下面这行
+  // res.setHeader('Access-Control-Allow-Credentials', 'true');
+  
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
