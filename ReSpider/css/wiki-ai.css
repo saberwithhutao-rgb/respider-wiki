@@ -1,0 +1,131 @@
+/* css/wiki-ai.css */
+#ai-assistant {
+    display: flex;
+    flex-direction: column;
+    height: 70vh;
+    max-width: 800px;
+    margin: 0 auto;
+    background: rgba(255, 255, 255, 0.95); /* 主要改动：白色半透背景 */
+    border-radius: 16px; /* 增大圆角 */
+    padding: 24px; /* 增加内边距 */
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1); /* 添加柔和阴影 */
+    color: #333; /* 将默认文字颜色改为深灰 */
+}
+
+.chat-messages {
+    flex: 1;
+    overflow-y: auto;
+    padding: 20px;
+    background: rgba(249, 250, 251, 0.8); /* 浅灰色背景 */
+    border-radius: 12px;
+    margin-bottom: 20px;
+    border: 1px solid rgba(209, 213, 219, 0.5); /* 添加细边框 */
+}
+
+.message {
+    margin-bottom: 16px;
+    padding: 12px 16px;
+    border-radius: 12px; /* 增大消息气泡圆角 */
+    max-width: 85%;
+    word-wrap: break-word;
+    line-height: 1.5;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05); /* 给消息添加轻微阴影 */
+}
+
+.user-message {
+    background: linear-gradient(135deg, #3b82f6, #1d4ed8); /* 蓝色渐变 */
+    color: white;
+    margin-left: auto;
+    border-bottom-right-radius: 4px;
+}
+
+.ai-message {
+    background: white; /* 纯白背景 */
+    color: #374151; /* 深灰色文字 */
+    margin-right: auto;
+    border-bottom-left-radius: 4px;
+    border: 1px solid #e5e7eb; /* 添加边框区隔 */
+    white-space: pre-wrap;
+}
+
+.message-header {
+    display: flex;
+    align-items: center;
+    margin-bottom: 6px;
+    font-size: 0.9em;
+}
+
+/* 如果保留头像，可以更新头像样式 */
+.avatar {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    margin-right: 8px;
+    border: 2px solid rgba(255, 255, 255, 0.8); /* 给头像加个边框 */
+}
+
+/* 如果移除头像，可以只保留这个时间样式 */
+.time {
+    margin-left: auto;
+    font-size: 0.85em;
+    color: #6b7280; /* 中灰色 */
+    opacity: 0.8;
+}
+
+.input-area {
+    display: flex;
+    gap: 12px;
+}
+
+.input-area textarea {
+    flex: 1;
+    padding: 14px 16px;
+    border: 1px solid #d1d5db;
+    border-radius: 12px;
+    background: white;
+    color: #111827;
+    /* ========== 主要修改：字体部分 ========== */
+    font-size: 15px;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Microsoft YaHei', 'Helvetica Neue', Arial, sans-serif;
+    /* ========== 修改结束 ========== */
+    resize: vertical;
+    min-height: 60px;
+    transition: all 0.2s;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    line-height: 1.5; /* 增加行高，使文字更舒展 */
+}
+
+.input-area textarea:focus {
+    outline: none;
+    border-color: #3b82f6; /* 聚焦时边框变蓝 */
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1); /* 聚焦发光效果 */
+}
+
+.input-area button {
+    padding: 0 28px;
+    background: linear-gradient(135deg, #3b82f6, #1d4ed8); /* 与用户消息呼应的渐变 */
+    color: white;
+    border: none;
+    border-radius: 12px;
+    cursor: pointer;
+    font-weight: bold;
+    align-self: flex-end;
+    height: 48px; /* 稍微增高 */
+    transition: all 0.2s;
+    box-shadow: 0 2px 4px rgba(59, 130, 246, 0.3);
+}
+
+.input-area button:hover:not(:disabled) {
+    transform: translateY(-1px); /* 鼠标悬停轻微上浮 */
+    box-shadow: 0 4px 8px rgba(59, 130, 246, 0.4);
+}
+
+.input-area button:active:not(:disabled) {
+    transform: translateY(0); /* 点击时恢复 */
+}
+
+.input-area button:disabled {
+    background: #9ca3af; /* 禁用时灰色 */
+    cursor: not-allowed;
+    box-shadow: none;
+}

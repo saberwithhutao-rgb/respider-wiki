@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI助手 - ReSpider Mod Wiki</title>
+    <link rel="icon" href="ico/title-logo.ico">
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/wiki-ai.css">
+</head>
+<body>
+    <div class="wiki-bg">
+        <div class="wiki-header">
+            <div class="wiki-header-title">
+                <a href="index.html">ReSpider Mod</a>
+            </div>
+            <div class="wiki-header-logo">
+                <img src="img/wiki-logo.png" alt="logo" width="128px">
+            </div>
+        </div>
+        
+        <div class="wiki-nav"> 
+            <a href="index.html">首页</a>
+            <a href="character.html">人物</a>
+            <a href="skill.html">技能</a>
+            <a href="wiki-ai.html" class="active">AI助手</a>
+        </div>
+        
+        <div class="wiki-content">
+            <div id="ai-assistant">
+                <!-- 聊天消息区域 -->
+                <div class="chat-messages" ref="messagesContainer">
+                    <!-- 遍历 messages 数组，动态生成消息 -->
+                    <div v-for="(msg, index) in messages" :key="index" :class="['message', msg.role === 'user' ? 'user-message' : 'ai-message']">
+                        <div class="message-header">
+                            <strong>{{ msg.role === 'user' ? '你' : 'AI助手' }}</strong>
+                            <span class="time">{{ formatTime(msg.timestamp) }}</span>
+                        </div>
+                        <div class="message-content">
+                            <!-- 使用 v-html 或 {{ }} 渲染内容，这里用文本渲染确保安全 -->
+                            {{ msg.content }}
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 输入区域 -->
+                <div class="input-area">
+                    <textarea 
+                        v-model="userInput" 
+                        placeholder="输入您的问题..."
+                        @keydown.enter.prevent="sendMessage"
+                        rows="3"
+                    ></textarea>
+                    <button @click="sendMessage" :disabled="isLoading">
+                        {{ isLoading ? '思考中...' : '发送' }}
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script type="module">
+    import { createApp } from "https://unpkg.com/vue@3/dist/vue.esm-browser.js";
+
+    // ⚠️ 警告：这里直接暴露API Key，仅用于测试！
+    // 在生产环境中应该使用后端代理
+    const API_KEY = '8c04a89e8f1049d480959bf25a404c4c.jrcB82pBNGfCgSZv'; // 这是你的智谱AI密钥，请确保准确
+    const API_BASE_URL = 'https://open.bigmodel.cn/api/paas/v4'; // 智谱AI的API地址
+
+    createApp({
+        data() {
+            return {
+                userInput: '',
+                messages: [],
+                isLoading: false,
+                currentStreamingMessage: '',
+                isStreaming: false
+            }
+        },
+        mounted() {
+            // 添加欢迎消息
+            this.messages.push({
+                role: 'assistant',
+                content: '你好！我是ReSpider Wiki的AI助手，有什么可以帮助您的吗？',
+                timestamp: new Date()
+            });
+        },
+        methods: {
+            formatTime(timestamp) {
+                if (!timestamp) return '';
+                const date = new Date(timestamp);
+                // 格式化为 时:分:秒
+                return date.toLocaleTimeString('zh-CN', { hour12: false });
+            },
+            async sendMessage() {
+                if (!this.userInput.trim() || this.isLoading) return;
+                
+                // 添加用户消息
+                const userMessage = this.userInput.trim();
+                this.messages.push({
+                    role: 'user',
+                    content: userMessage,
+                    timestamp: new Date()
+                });
+                
+                // 清空输入框
+                this.userInput = '';
+                
+                // 开始加载
+                this.isLoading = true;
+                
+                try {
+                    // 这里可以选择流式或非流式
+                    await this.sendNormalRequest(userMessage);
+                } catch (error) {
+                    console.error('请求失败:', error);
+                    this.messages.push({
+                        role: 'assistant',
+                        content: `抱歉，出错了：${error.message}`,
+                        timestamp: new Date()
+                    });
+                } finally {
+                    this.isLoading = false;
+                    this.isStreaming = false;
+                    this.currentStreamingMessage = '';
+                }
+            },
+            
+            // 方案1：非流式请求（简单）
+            async sendNormalRequest(userMessage) {
+                try {
+                    // 将请求URL改为你的Vercel函数地址，格式通常为：https://你的项目名.vercel.app/api/chat
+                    const proxyUrl = 'https://你的项目名.vercel.app/api/chat'; // ⬅️ 请修改这里！
+
+                    const response = await fetch(proxyUrl, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            messages: this.messages.map(msg => ({
+                                role: msg.role,
+                                content: msg.content
+                            })),
+                            stream: false
+                        })
+                    });
+                    
+                    console.log('收到响应，状态码:', response.status);
+                    
+                    if (!response.ok) {
+                        // 尝试读取更详细的错误信息
+                        const errorText = await response.text();
+                        console.error('API请求失败，响应内容:', errorText);
+                        throw new Error(`API请求失败：${response.status} - ${errorText}`);
+                    }
+                    
+                    const data = await response.json();
+                    console.log('API响应数据:', data); // 这是关键调试信息
+                    
+                    // 尝试从智谱API的响应结构中提取回复内容
+                    // 注意：智谱的响应结构可能是 data.choices[0].message.content
+                    if (data && data.choices && data.choices[0] && data.choices[0].message) {
+                        const aiReply = data.choices[0].message.content;
+                        this.messages.push({
+                            role: 'assistant',
+                            content: aiReply,
+                            timestamp: new Date()
+                        });
+                    } else {
+                        console.error('无法从响应中解析出回复内容，响应结构为:', data);
+                        throw new Error('API返回了未知的数据格式');
+                    }
+                    
+                } catch (error) {
+                    console.error('请求过程中发生错误:', error);
+                    this.messages.push({
+                        role: 'assistant',
+                        content: `抱歉，请求AI时出现错误：${error.message}`,
+                        timestamp: new Date()
+                    });
+                }
+            },
+            
+            
+            // 滚动到底部
+            scrollToBottom() {
+                this.$nextTick(() => {
+                    const container = this.$refs.messagesContainer;
+                    if (container) {
+                        container.scrollTop = container.scrollHeight;
+                    }
+                });
+            }
+        },
+        watch: {
+            // 当消息更新时自动滚动
+            messages: {
+                handler() {
+                    this.scrollToBottom();
+                },
+                deep: true
+            }
+        }
+    }).mount("#ai-assistant");
+    </script>
+</body>
+</html>
