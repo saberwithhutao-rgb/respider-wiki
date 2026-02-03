@@ -65,6 +65,22 @@
 
         createApp({
             setup() {
+                // ================== 新增：动态API地址配置 ==================
+                // 根据当前访问的域名，选择最优API地址
+                let proxyUrl;
+                const currentHost = window.location.hostname;
+
+                if (currentHost === 'www.55kjikj.xyz' || currentHost === '55kjikj.xyz') {
+                    // 访问新域名，直连国内ECS（速度最快）
+                    proxyUrl = '/api/chat';
+                    console.log('当前使用API地址（直连ECS）:', proxyUrl);
+                } else {
+                    // 访问Vercel或GitHub，使用Vercel代理（保证可用性）
+                    proxyUrl = 'https://respider-wiki.vercel.app/api/chat';
+                    console.log('当前使用API地址（Vercel代理）:', proxyUrl);
+                }
+                // ================== 动态配置结束 ==================
+
                 // 响应式数据
                 const userInput = ref('');
                 const messages = ref([]);
@@ -130,7 +146,7 @@
                     }
                 };
 
-                // 流式请求函数
+                // 流式请求函数 (关键修改：使用上面定义的 proxyUrl 变量)
                 const sendNormalRequest = async (userMessage) => {
                     // 为本次请求创建新的控制器
                     abortController = new AbortController();
@@ -144,7 +160,7 @@
                     });
 
                     try {
-                        const proxyUrl = 'https://respider-wiki.vercel.app/api/chat';
+                        // 注意：这里直接使用上面动态定义的 proxyUrl 变量
                         const response = await fetch(proxyUrl, {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
@@ -216,7 +232,7 @@
 
                 // 简化后的Shift+Enter处理：阻止默认换行，改为发送
                 const handleShiftEnter = (event) => {
-
+                    // 可在此处添加逻辑，目前为空
                 };
 
                 // 滚动到底部
@@ -237,7 +253,7 @@
                     messagesContainer,
                     formatTime,
                     sendMessage,
-                    handleShiftEnter, 
+                    handleShiftEnter,
                     sendNormalRequest,
                     scrollToBottom
                 };
