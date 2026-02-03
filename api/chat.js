@@ -1,7 +1,11 @@
 // /api/chat.js - 修复预检请求的CORS版本
 export default async function handler(req, res) {
-  // 1. 定义允许的来源（Domain）
-  const allowedOrigins = ['https://saberwithhutao-rgb.github.io', 'https://respider-wiki.vercel.app'];
+  const allowedOrigins = [
+    'https://saberwithhutao-rgb.github.io',
+    'https://respider-wiki.vercel.app',
+    // 新增：添加当前的临时预览域名
+    'https://respider-wiki-git-main-sabers-projects-0427f772.vercel.app'
+  ];
   const requestOrigin = req.headers.origin;
   const isOriginAllowed = allowedOrigins.includes(requestOrigin);
 
